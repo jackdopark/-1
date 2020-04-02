@@ -27,7 +27,7 @@ private static SqlSessionFactory factory;
 	
 	public static int insertMember(MemberVo m) {
 		int re = -1;
-		SqlSession session = factory.openSession(true);
+		SqlSession session = factory.openSession();
 		re = session.insert("member.insert", m);
 		session.commit();
 		session.close();
