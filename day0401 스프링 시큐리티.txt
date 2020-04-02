@@ -1,0 +1,116 @@
+<<스프링 시큐리티>>
+스프링이 제공하는 로그인폼을 이용해봐요.
+
+<dependency>				<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+
+위의 설정을 추가하면 스프링이 제공하는 loginForm을 사용할 수 있다.
+기본적으로 스프링 시큐리티가 "user"라는 사용자명을 제공한다.
+암호는 console에 추가되어있다.
+
+==> db랑 연결해야한다.
+최소한 매니저까지 만들어야됨
+
+----------------------
+인증: 로그인처리
+인가: 권한설정==> 특정 서비스에 접근할 수 있는 권한
+		role을 설정한다.
+
+
+create table member100(
+	id varchar2(50) primary key,
+	pwd varchar2(100),
+	name varchar2(20),
+	role varchar2(20)
+)
+
+회원의 정보를 위한 테이블을 다음과 같이 생성한다.
+
+패스워드에는 암호화하면 길어지기 때문에 여유있게 길이를 정해준다.
+
+회원등록을 위한 기능을 추가한다.
+회원검색을 위한 기능을 추가한다.(id)
+
+-----------------------------------------------------------------
+"/" 나 "/all"에 있는 모든 요청은 로그인 상관없이 아무나 접근가능하지만
+"/admin" 이라는 모든 요청에는 권한(role)이 있어야 사용할 수 있다.
+
+그나머지 요청은 로그인만 하면 사용할 수 있다.
+-----------------------------------------------------------------
+암호화를 위한 객체를 생성한다.
+<bean id="passwordEncoder" class="PassWordEncoder"/>
+
+-----------------------------------------------------------------
+mybatis 설정, vo생성
+	회원을 추가하는 메소드와
+	회원아이디를 매개변수로 받아 회원의 정보 VO를 반환하는 메소드
+
+
+-----------------------------------------------------------------
+
+메인메소드가 있는 클래스에서 다음을 추가하고
+@Bean
+public PasswordEncoder passwordEncoder() {
+return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+	}
+
+
+실험을 위하여 두명의 레코드를 추가한다.
+public static void main(String[] args) {
+
+MemberManager.insertMember(new MemberVo("tiger",PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("tiger"),"홍길동","USER"));
+
+MemberManager.insertMember(new MemberVo("master",PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("1234"),"곽동길","ADMIN"));
+
+SpringApplication.run(BitSecurityApplication.class, args);
+	}
+
+실험이 한번 끝나면 주석을 박아줘야한다.
+
+스프링 시큐리티가 로그인 인증처리 할때
+비밀번호는 인코딩(암호화)하여 검사하기 때문에 
+우리도 db에 추가할때는 인코딩 해야한다.
+
+-----------------------------------------------------------------------
+
+http.authorizeRequests()
+.mvcMatchers("/","/all/**").permitAll()
+.mvcMatchers("/","/admin/**").hasRole("ADMIN")
+.anyRequest().authenticated();
+//1번째 줄 사용자의 요청별 권한 설정을 할때 쓴다
+//2번째 줄 이러한 요청들은 아무나 사용할 수 있다.
+//3번째 줄 이러한 요청들은 관리자 권한 
+(ADMIN role)이 있어야 사용할 수 있다.
+//4번째 줄 나머지 요청들은 인증만 있으면 된다.
+
+-----------------------------------------------------------------------
+데이터베이스와 연동하여 사용자 설정을 한다.
+
+확장:: 클래스를 상속
+구현:: 인터페이스를 구현
+
+사용자 설정을 위해서는
+스프링 시큐리티가 제공하는 인터페이스(" UserDetailService ")를 구현한다. 
+
+----------------------------------------------------------------------
+서비스란?
+
+Controller : 사용자 요청에 처리
+Service	 : 사용자 요청에 따라 바로 Dao를 처리하는 것 뿐만아니라 
+		이것저것 처리해야 될일이 많다.
+		이것은 Controller에 넣기에는 가독성이 떨어지고
+		Dao에 넣기도 그러므로 이런상황에 Service를 사용한다.
+Dao	 : DB에 엑세스
+
+
+
+
+
+
+
+
+
+
+
+
